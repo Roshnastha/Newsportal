@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, Menu, X, Sun, Moon, Bell } from 'lucide-react';
+import { LogIn ,Search, Menu, X, Sun, Moon, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -88,8 +88,8 @@ export function Header() {
           {/* Actions */}
           <div className="flex items-center space-x-2">
             <Button variant="outline" size="sm" className="hidden sm:flex">
-              <Bell className="h-4 w-4 mr-2" />
-              Subscribe
+              <LogIn  className="h-4 w-4 mr-2" />
+              login
             </Button>
             <Button
               variant="ghost"
