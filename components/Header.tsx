@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { LogIn ,Search, Menu, X, Sun, Moon, Bell } from 'lucide-react';
+import { LogIn, Search, Menu, X, Sun, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useTheme } from 'next-themes';
+import { useRouter } from 'next/navigation';
 
 const categories = [
   'Breaking News',
@@ -23,10 +24,10 @@ export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { theme, setTheme } = useTheme();
+  const router = useRouter(); 
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle search functionality
     console.log('Searching for:', searchQuery);
   };
 
@@ -48,7 +49,11 @@ export function Header() {
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
                 className="text-primary-foreground hover:bg-primary-foreground/20"
               >
-                {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                {theme === 'dark' ? (
+                  <Sun className="h-4 w-4" />
+                ) : (
+                  <Moon className="h-4 w-4" />
+                )}
               </Button>
             </div>
           </div>
@@ -87,8 +92,13 @@ export function Header() {
 
           {/* Actions */}
           <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm" className="hidden sm:flex">
-              <LogIn  className="h-4 w-4 mr-2" />
+            <Button
+              variant="outline"
+              size="sm"
+              className="hidden sm:flex"
+              onClick={() => router.push('/login')} // ✅ navigate to /login
+            >
+              <LogIn className="h-4 w-4 mr-2" />
               Login
             </Button>
             <Button
