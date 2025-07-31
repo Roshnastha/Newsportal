@@ -37,7 +37,7 @@ export function Header() {
         <div className="container mx-auto px-4 py-2">
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center space-x-4">
-              <span className="font-medium">📍 Live from New York</span>
+              <span className="font-medium">📍 Live from Kathmandu</span>
               <span>Tuesday, January 15, 2025</span>
             </div>
             <div className="hidden md:flex items-center space-x-4">
@@ -89,7 +89,7 @@ export function Header() {
           <div className="flex items-center space-x-2">
             <Button variant="outline" size="sm" className="hidden sm:flex">
               <LogIn  className="h-4 w-4 mr-2" />
-              login
+              Login
             </Button>
             <Button
               variant="ghost"

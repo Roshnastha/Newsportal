@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Clock, User, Bookmark, Share2, MessageCircle, TrendingUp } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const newsArticles = [
   {
@@ -78,16 +77,9 @@ const newsArticles = [
   }
 ];
 
-const categories = ['All', 'Technology', 'Business', 'Environment', 'Health', 'Sports', 'Culture'];
-
 export function NewsGrid() {
-  const [selectedCategory, setSelectedCategory] = useState('All');
   const [bookmarkedArticles, setBookmarkedArticles] = useState<number[]>([]);
   const router = useRouter();
-
-  const filteredArticles = selectedCategory === 'All' 
-    ? newsArticles 
-    : newsArticles.filter(article => article.category === selectedCategory);
 
   const toggleBookmark = (articleId: number) => {
     setBookmarkedArticles(prev => 
@@ -100,109 +92,96 @@ export function NewsGrid() {
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Latest News</h2>
         <div className="flex items-center space-x-2">
           <TrendingUp className="h-5 w-5 text-primary" />
           <span className="text-sm font-medium">Trending Now</span>
         </div>
       </div>
 
-      {/* Category Filter */}
-      <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
-        <TabsList className="grid w-full grid-cols-7">
-          {categories.map((category) => (
-            <TabsTrigger key={category} value={category} className="text-xs">
-              {category}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-
-        <TabsContent value={selectedCategory} className="mt-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-6 lg:gap-8">
-            {filteredArticles.map((article) => (
-              <article 
-                key={article.id} 
-                className="group cursor-pointer"
-                onClick={() => router.push(`/news/${article.id}`)}
-              >
-                <div className="bg-card rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border">
-                  <div className="relative">
-                    <img
-                      src={article.image}
-                      alt={article.title}
-                      className="w-full h-40 sm:h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute top-4 left-4 flex items-center space-x-2">
-                      <Badge variant="secondary" className="bg-background/90 text-foreground">
-                        {article.category}
+      <div className="mt-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-6 lg:gap-8">
+          {newsArticles.map((article) => (
+            <article 
+              key={article.id} 
+              className="group cursor-pointer"
+              onClick={() => router.push(`/news/${article.id}`)}
+            >
+              <div className="bg-card rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border">
+                <div className="relative">
+                  <img
+                    src={article.image}
+                    alt={article.title}
+                    className="w-full h-40 sm:h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute top-4 left-4 flex items-center space-x-2">
+                    <Badge variant="secondary" className="bg-background/90 text-foreground">
+                      {article.category}
+                    </Badge>
+                    {article.trending && (
+                      <Badge variant="destructive" className="animate-pulse">
+                        <TrendingUp className="h-3 w-3 mr-1" />
+                        Trending
                       </Badge>
-                      {article.trending && (
-                        <Badge variant="destructive" className="animate-pulse">
-                          <TrendingUp className="h-3 w-3 mr-1" />
-                          Trending
-                        </Badge>
-                      )}
+                    )}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="absolute top-4 right-4 bg-background/90 hover:bg-background"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleBookmark(article.id);
+                    }}
+                  >
+                    <Bookmark 
+                      className={`h-4 w-4 ${
+                        bookmarkedArticles.includes(article.id) 
+                          ? 'fill-primary text-primary' 
+                          : 'text-muted-foreground'
+                      }`} 
+                    />
+                  </Button>
+                </div>
+
+                <div className="p-6">
+                  <h3 className="font-bold text-base sm:text-lg leading-tight mb-3 group-hover:text-primary transition-colors line-clamp-2">
+                    {article.title}
+                  </h3>
+                  
+                  <p className="text-sm sm:text-base text-muted-foreground mb-4 line-clamp-2">
+                    {article.excerpt}
+                  </p>
+
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between text-sm text-muted-foreground mb-4 gap-2">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+                      <div className="flex items-center space-x-1">
+                        <User className="h-4 w-4" />
+                        <span>{article.author}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <Clock className="h-4 w-4" />
+                        <span>{article.publishedAt}</span>
+                      </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="absolute top-4 right-4 bg-background/90 hover:bg-background"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleBookmark(article.id);
-                      }}
-                    >
-                      <Bookmark 
-                        className={`h-4 w-4 ${
-                          bookmarkedArticles.includes(article.id) 
-                            ? 'fill-primary text-primary' 
-                            : 'text-muted-foreground'
-                        }`} 
-                      />
+                    <span className="font-medium">{article.readTime}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-4 border-t text-sm">
+                    <div className="flex items-center space-x-1 text-sm text-muted-foreground">
+                      <MessageCircle className="h-4 w-4" />
+                      <span>{article.comments} comments</span>
+                    </div>
+                    <Button variant="ghost" size="sm">
+                      <Share2 className="h-4 w-4" />
                     </Button>
                   </div>
-
-                  <div className="p-6">
-                    <h3 className="font-bold text-base sm:text-lg leading-tight mb-3 group-hover:text-primary transition-colors line-clamp-2">
-                      {article.title}
-                    </h3>
-                    
-                    <p className="text-sm sm:text-base text-muted-foreground mb-4 line-clamp-2">
-                      {article.excerpt}
-                    </p>
-
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between text-sm text-muted-foreground mb-4 gap-2">
-                      <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-                        <div className="flex items-center space-x-1">
-                          <User className="h-4 w-4" />
-                          <span>{article.author}</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <Clock className="h-4 w-4" />
-                          <span>{article.publishedAt}</span>
-                        </div>
-                      </div>
-                      <span className="font-medium">{article.readTime}</span>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-4 border-t text-sm">
-                      <div className="flex items-center space-x-1 text-sm text-muted-foreground">
-                        <MessageCircle className="h-4 w-4" />
-                        <span>{article.comments} comments</span>
-                      </div>
-                      <Button variant="ghost" size="sm">
-                        <Share2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
                 </div>
-              </article>
-            ))}
-          </div>
-        </TabsContent>
-      </Tabs>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
 
-      {/* Load More Button */}
       <div className="text-center">
         <Button variant="outline" size="lg">
           Load More Articles
