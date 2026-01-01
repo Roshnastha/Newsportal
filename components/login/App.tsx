@@ -1,271 +1,160 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Eye, EyeOff, Mail, Lock, ArrowRight, Newspaper } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Mail, Lock, User } from 'lucide-react';
+import { googleLogin, appleLogin } from './oauth';
+import './login.css';
 
-function App() {
-  const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    rememberMe: false
-  });
-  const [errors, setErrors] = useState({
-    email: '',
-    password: ''
-  });
-  const [isLoading, setIsLoading] = useState(false);
+// Google & Apple Icons
+export const GoogleIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 533.5 544.3">
+    <path fill="#4285F4" d="M533.5 278.4c0-18.5-1.5-37.1-4.5-55.3H272v104.7h146.9c-6.3 33.9-25.6 62.8-54.5 82.1v68.2h87.9c51.4-47.4 81.2-116.8 81.2-199.7z"/>
+    <path fill="#34A853" d="M272 544.3c73.5 0 135-24.5 180-66.6l-87.9-68.2c-24.5 16.5-56 26-92.1 26-70.7 0-130.5-47.8-152-112.1H30v70.3c45 89 136.2 150.6 242 150.6z"/>
+    <path fill="#FBBC05" d="M120 322.6c-10.5-31-10.5-64.4 0-95.4V156.9H30c-37.8 73.1-37.8 160.2 0 233.3l90-67.6z"/>
+    <path fill="#EA4335" d="M272 107.1c38.9-0.6 75.7 14 103.8 41.4l77.8-77.8C406.6 25.5 344.1 0 272 0 166.2 0 75 61.6 30 150.6l90 70.3c21.5-64.3 81.3-112 152-112z"/>
+  </svg>
+);
 
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
+export const AppleIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+    <path d="M16.365 1.43c0 1.14-.46 2.25-1.19 3.03-.8.88-1.97 1.46-3.18 1.46-.08-1.18.48-2.38 1.28-3.17.74-.72 1.9-1.22 3.09-1.32.05.02.09.03.12.04zM20.5 16.03c-.2.45-.47.88-.79 1.29-1.04 1.36-2.3 2.45-3.77 2.45-1.25 0-1.84-.8-3.44-.8-1.6 0-2.08.8-3.44.8-1.5 0-2.8-1.37-3.81-2.74-2.08-2.73-3.66-7.67-1.58-11.08.88-1.46 2.46-2.39 4.1-2.39 1.47 0 2.92.95 3.44.95.51 0 2.24-1.17 3.74-1.12.64.02 2.42.26 3.57 1.95-.08.05-2.14 1.26-2.14 3.76 0 2.51 2.05 3.39 2.12 3.44-.01.05-.14.59-.5 1.25z"/>
+  </svg>
+);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+export default function LoginApp() {
+  const [role, setRole] = useState<'user' | 'publisher'>('user');
+  const [mode, setMode] = useState<'login' | 'signup'>('login');
 
-    if (errors[name as keyof typeof errors]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
-  };
+  // Publisher cannot signup
+  useEffect(() => {
+    if (role === 'publisher') setMode('login');
+  }, [role]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const newErrors = {
-      email: '',
-      password: ''
-    };
-
-    if (!formData.email) {
-      newErrors.email = 'Email is required';
-    } else if (!validateEmail(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
-
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-    }
-
-    setErrors(newErrors);
-
-    if (!newErrors.email && !newErrors.password) {
-      setIsLoading(true);
-      setTimeout(() => {
-        setIsLoading(false);
-        alert('Login functionality would be implemented here');
-      }, 2000);
-    }
-  };
-
-  const togglePasswordVisibility = () => {
-    setShowPassword(prev => !prev);
-  };
+  // Slider content
+  const slides = [
+    { title: "Breaking News at Your Fingertips", description: "Stay updated with the latest headlines in real-time." },
+    { title: "Join Our Publisher Network", description: "Share your stories and reach a wider audience." },
+    { title: "Advanced Dashboard Analytics", description: "Track readership and engagement with ease." }
+  ];
+  const [currentSlide, setCurrentSlide] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => setCurrentSlide((prev) => (prev + 1) % slides.length), 4000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-black flex">
-      {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-gray-900 via-gray-800 to-black relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-purple-900/10 to-transparent"></div>
-        
-        {/* Animated background elements */}
-        <div className="absolute inset-0">
-          <div className="absolute top-20 left-20 w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-          <div className="absolute top-40 right-32 w-1 h-1 bg-purple-400 rounded-full animate-ping"></div>
-          <div className="absolute bottom-32 left-16 w-1.5 h-1.5 bg-blue-300 rounded-full animate-pulse"></div>
-          <div className="absolute top-1/2 right-20 w-1 h-1 bg-purple-300 rounded-full animate-ping"></div>
-        </div>
-
-        <div className="relative z-10 flex flex-col justify-center items-center p-12 text-white">
-          <div className="mb-8 text-center">
-            <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 shadow-2xl">
-              <Newspaper className="w-12 h-12 text-white" />
-            </div>
-            <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-              News Hub
-            </h1>
-            <p className="text-2xl text-blue-300 mb-8 font-light">Publisher Dashboard</p>
-            <p className="text-gray-300 text-center max-w-md leading-relaxed text-lg">
-              Access your content management system, publish breaking news, and engage with your audience through our advanced publishing platform.
-            </p>
-          </div>
-          
-          {/* Decorative elements */}
-          <div className="absolute top-20 right-20 w-32 h-32 border border-gray-700 rounded-full opacity-30"></div>
-          <div className="absolute bottom-20 left-20 w-24 h-24 border border-gray-600 rounded-full opacity-20"></div>
-          <div className="absolute top-1/2 left-10 w-16 h-16 border border-gray-700 rounded-full opacity-25"></div>
-          
-          {/* Grid pattern overlay */}
-          <div className="absolute inset-0 opacity-5">
-            <div className="w-full h-full" style={{
-              backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
-              backgroundSize: '40px 40px'
-            }}></div>
-          </div>
+    <div className="flex min-h-screen">
+      {/* LEFT BRAND */}
+      <div className="hidden lg:flex lg:w-1/2 bg-[#11827] items-center justify-center p-12">
+        <div className="text-center">
+          <h1 className="text-[#fafafa] text-5xl font-bold mb-4">NEWSHUB</h1>
+          <p className="text-[#a3a3a3] text-lg max-w-md">
+            Trusted newsroom platform where stories breathe and truth finds its voice.
+          </p>
         </div>
       </div>
 
-      {/* Right Side - Login Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-950">
+      {/* RIGHT AUTH */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center bg-[#000000] p-8">
         <div className="w-full max-w-md">
-          {/* Mobile Header */}
-          <div className="lg:hidden text-center mb-8">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-              <Newspaper className="w-8 h-8 text-white" />
-            </div>
-            <h1 className="text-2xl font-bold text-white mb-2">News Portal</h1>
-            <p className="text-gray-400">Publisher Login</p>
+          {/* Role Toggle */}
+          <div className="flex justify-center mb-6">
+            <button
+              className={`px-4 py-2 rounded-l-lg ${role === 'user' ? 'bg-[#2563eb] text-white' : 'bg-[#1f1f1f] text-[#fafafa]'}`}
+              onClick={() => setRole('user')}
+            >
+              User
+            </button>
+            <button
+              className={`px-4 py-2 rounded-r-lg ${role === 'publisher' ? 'bg-[#2563eb] text-white' : 'bg-[#1f1f1f] text-[#fafafa]'}`}
+              onClick={() => setRole('publisher')}
+            >
+              Publisher
+            </button>
           </div>
 
           {/* Login Card */}
-          <div className="bg-gray-900 rounded-2xl shadow-2xl p-8 border border-gray-800 backdrop-blur-sm">
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold text-white mb-2">Welcome Back</h2>
-              <p className="text-gray-400 text-lg">Sign in to your publisher account</p>
+          <div className="bg-[#0a0a0a] rounded-2xl shadow-2xl p-8">
+            {/* Slider */}
+            <div className="slider bg-[#11827] rounded-xl p-4 mb-6 text-center">
+              <h3 className="text-white font-bold">{slides[currentSlide].title}</h3>
+              <p className="text-[#fafafa] text-sm mt-1">{slides[currentSlide].description}</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Email Field */}
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Mail className="w-5 h-5 text-gray-500" />
+            {/* Heading */}
+            <h2 className="text-[#ffffff] text-2xl font-bold mb-1">{mode === 'login' ? 'Sign In' : 'Create Account'}</h2>
+            <p className="text-[#a3a3a3] mb-4">
+              {role === 'publisher'
+                ? 'Access your publisher dashboard'
+                : mode === 'login'
+                  ? 'Access your account'
+                  : 'Join the NewsHub network'}
+            </p>
+
+            {/* Form Fields */}
+            <form className="space-y-4">
+              {role === 'user' && mode === 'signup' && (
+                <div className="field">
+                  <label className="block mb-1">Name</label>
+                  <div className="flex items-center bg-[#1f293f] rounded-lg p-2">
+                    <User size={18} className="mr-2 text-[#e2e2e2]" />
+                    <input placeholder="Your full name" className="bg-[#1f293f] flex-1 outline-none text-[#fafafa]" />
                   </div>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className={`w-full pl-10 pr-4 py-3 bg-gray-800 border rounded-lg focus:outline-none focus:ring-2 transition-all duration-200 text-white placeholder-gray-500 ${
-                      errors.email 
-                        ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
-                        : 'border-gray-700 focus:ring-blue-500 focus:border-blue-500 hover:border-gray-600'
-                    }`}
-                    placeholder="publisher@newsportal.com"
-                  />
                 </div>
-                {errors.email && (
-                  <p className="mt-2 text-sm text-red-400">{errors.email}</p>
-                )}
-              </div>
+              )}
 
-              {/* Password Field */}
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-                  Password
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Lock className="w-5 h-5 text-gray-500" />
-                  </div>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    id="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    className={`w-full pl-10 pr-12 py-3 bg-gray-800 border rounded-lg focus:outline-none focus:ring-2 transition-all duration-200 text-white placeholder-gray-500 ${
-                      errors.password 
-                        ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
-                        : 'border-gray-700 focus:ring-blue-500 focus:border-blue-500 hover:border-gray-600'
-                    }`}
-                    placeholder="Enter your password"
-                  />
-                  <button
-                    type="button"
-                    onClick={togglePasswordVisibility}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-300 transition-colors duration-200"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="w-5 h-5" />
-                    ) : (
-                      <Eye className="w-5 h-5" />
-                    )}
-                  </button>
+              {/* Email */}
+              <div className="field">
+                <label className="block mb-1">Email</label>
+                <div className="flex items-center bg-[#1f293f] rounded-lg p-2">
+                  <Mail size={18} className="mr-2 text-[#e2e2e2]" />
+                  <input placeholder="publisher@newshub.com" className="bg-[#1f293f] flex-1 outline-none text-[#fafafa]" />
                 </div>
-                {errors.password && (
-                  <p className="mt-2 text-sm text-red-400">{errors.password}</p>
-                )}
               </div>
 
-              {/* Remember Me & Forgot Password */}
-              <div className="flex items-center justify-between">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="rememberMe"
-                    checked={formData.rememberMe}
-                    onChange={handleInputChange}
-                    className="w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
-                  />
-                  <span className="ml-2 text-sm text-gray-300">Remember me</span>
-                </label>
-                <a 
-                  href="#" 
-                  className="text-sm text-blue-400 hover:text-blue-300 transition-colors duration-200"
-                >
-                  Forgot password?
-                </a>
+              {/* Password */}
+              <div className="field">
+                <label className="block mb-1">Password</label>
+                <div className="flex items-center bg-[#1f293f] rounded-lg p-2">
+                  <Lock size={18} className="mr-2 text-[#e2e2e2]" />
+                  <input type="password" placeholder="••••••••" className="bg-[#1f293f] flex-1 outline-none text-[#fafafa]" />
+                </div>
               </div>
 
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={isLoading}
-                className={`w-full py-3 px-4 rounded-lg text-white font-medium transition-all duration-200 flex items-center justify-center ${
-                  isLoading
-                    ? 'bg-gray-600 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transform hover:scale-[1.02] active:scale-[0.98]'
-                } shadow-lg hover:shadow-xl`}
-              >
-                {isLoading ? (
-                  <div className="flex items-center">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                    Signing in...
-                  </div>
-                ) : (
-                  <div className="flex items-center">
-                    Sign In
-                    <ArrowRight className="w-5 h-5 ml-2" />
-                  </div>
-                )}
+              {/* Submit */}
+              <button type="submit" className="w-full py-2 bg-[#2563eb] rounded-lg text-[#ffffff] font-semibold hover:bg-[#11827] transition">
+                {mode === 'login' ? 'Sign In' : 'Sign Up'}
               </button>
+
+              {/* OAuth only for Users */}
+              {role === 'user' && (
+                <>
+                  <div className="text-center text-[#fafafa] my-2">or continue with</div>
+                  <button type="button" onClick={googleLogin} className="w-full flex items-center justify-center gap-2 py-2 bg-[#1f293f] rounded-lg hover:bg-[#2563eb] transition">
+                    <GoogleIcon />
+                    Continue with Google
+                  </button>
+                  <button type="button" onClick={appleLogin} className="w-full flex items-center justify-center gap-2 py-2 bg-[#1f293f] rounded-lg hover:bg-[#2563eb] transition mt-2">
+                    <AppleIcon />
+                    Continue with Apple
+                  </button>
+                </>
+              )}
             </form>
 
-            {/* Divider */}
-            <div className="mt-8 pt-6 border-t border-gray-800">
-              <p className="text-center text-sm text-gray-400">
-                Need publisher access?{' '}
-                <a href="#" className="text-blue-400 hover:text-blue-300 font-medium transition-colors duration-200">
-                  Contact administrator
-                </a>
-              </p>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="text-center mt-8">
-            <p className="text-sm text-gray-500">
-              © 2025 News Portal. All rights reserved.
-            </p>
+            {/* Switch login/signup only for users */}
+            {role === 'user' && (
+              <div className="mt-4 text-center text-[#fafafa]">
+                {mode === 'login' ? (
+                  <>New here? <span className="text-[#2563eb] cursor-pointer" onClick={() => setMode('signup')}>Create account</span></>
+                ) : (
+                  <>Already have an account? <span className="text-[#2563eb] cursor-pointer" onClick={() => setMode('login')}>Sign in</span></>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
     </div>
   );
 }
-
-export default App;

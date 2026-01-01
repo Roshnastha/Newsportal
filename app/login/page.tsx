@@ -1,6 +1,5 @@
-'use client';
-import LoginPage from '@/components/login/App';
+import App from "../../components/login/App";
 
-export default function Login() {
-  return <LoginPage />;
+export default function LoginPage() {
+  return <App />;
 }

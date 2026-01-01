@@ -1,34 +1,35 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import { LogIn, Search, Menu, X, Sun, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useTheme } from 'next-themes';
-import { useRouter } from 'next/navigation';
-
-const categories = [
-  'Breaking News',
-  'Politics',
-  'Technology',
-  'Business',
-  'Sports',
-  'Entertainment',
-  'Science',
-  'Health',
-  'World',
-];
+import { categories as dataCategories, slugify } from '../lib/news-data'; // <-- correct relative import
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { theme, setTheme } = useTheme();
-  const router = useRouter(); 
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // Keep "Breaking News" (All) first, then categories from data
+  const categories = ['Breaking News', ...dataCategories];
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Searching for:', searchQuery);
+    if (!searchQuery.trim()) return;
+    router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    setIsMenuOpen(false);
+  };
+
+  const linkForCategory = (category: string) => {
+    if (category === 'Breaking News') return '/news';
+    return `/news/category/${encodeURIComponent(slugify(category))}`;
   };
 
   return (
@@ -49,11 +50,7 @@ export function Header() {
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
                 className="text-primary-foreground hover:bg-primary-foreground/20"
               >
-                {theme === 'dark' ? (
-                  <Sun className="h-4 w-4" />
-                ) : (
-                  <Moon className="h-4 w-4" />
-                )}
+                {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               </Button>
             </div>
           </div>
@@ -65,9 +62,7 @@ export function Header() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           {/* Logo */}
           <div className="flex items-center space-x-2">
-            <div className="bg-primary text-primary-foreground p-2 rounded-lg font-bold text-xl">
-              NH
-            </div>
+            <div className="bg-primary text-primary-foreground p-2 rounded-lg font-bold text-xl">NH</div>
             <div>
               <h1 className="text-2xl font-bold text-primary">NewsHub</h1>
               <p className="text-xs text-muted-foreground">Your Premier News Destination</p>
@@ -92,21 +87,11 @@ export function Header() {
 
           {/* Actions */}
           <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="hidden sm:flex"
-              onClick={() => router.push('/login')} // ✅ navigate to /login
-            >
+            <Button variant="outline" size="sm" className="hidden sm:flex" onClick={() => router.push('/login')}>
               <LogIn className="h-4 w-4 mr-2" />
               Login
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="sm:hidden"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
+            <Button variant="ghost" size="sm" className="sm:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
               {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
           </div>
@@ -133,20 +118,28 @@ export function Header() {
       <nav className={`border-t ${isMenuOpen ? 'block' : 'hidden sm:block'}`}>
         <div className="container mx-auto px-4 py-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 lg:space-x-6 space-y-2 sm:space-y-0 overflow-x-auto">
-            {categories.map((category) => (
-              <Button
-                key={category}
-                variant="ghost"
-                className="justify-start sm:justify-center text-sm font-medium hover:text-primary whitespace-nowrap"
-              >
-                {category}
-                {category === 'Breaking News' && (
-                  <Badge variant="destructive" className="ml-2 text-xs">
-                    Live
-                  </Badge>
-                )}
-              </Button>
-            ))}
+            {categories.map((category) => {
+              const href = linkForCategory(category);
+              const isActive = pathname?.startsWith(href);
+
+              return (
+                <Link key={category} href={href} onClick={() => setIsMenuOpen(false)}>
+                  <Button
+                    variant="ghost"
+                    className={`justify-start sm:justify-center text-sm font-medium hover:text-primary whitespace-nowrap ${
+                      isActive ? 'text-primary underline' : ''
+                    }`}
+                  >
+                    {category}
+                    {category === 'Breaking News' && (
+                      <Badge variant="destructive" className="ml-2 text-xs">
+                        Live
+                      </Badge>
+                    )}
+                  </Button>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </nav>
